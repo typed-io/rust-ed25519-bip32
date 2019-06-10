@@ -154,6 +154,11 @@ impl AsRef<[u8]> for XPrv {
         &self.0
     }
 }
+impl From<XPrv> for [u8; XPRV_SIZE] {
+    fn from(v: XPrv) -> [u8; XPRV_SIZE] {
+        v.0
+    }
+}
 impl Drop for XPrv {
     fn drop(&mut self) {
         securemem::zero(&mut self.0);
@@ -223,6 +228,11 @@ impl fmt::Debug for XPub {
 impl AsRef<[u8]> for XPub {
     fn as_ref(&self) -> &[u8] {
         &self.0
+    }
+}
+impl From<XPub> for [u8; XPUB_SIZE] {
+    fn from(v: XPub) -> [u8; XPUB_SIZE] {
+        v.0
     }
 }
 
