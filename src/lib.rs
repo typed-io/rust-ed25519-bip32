@@ -29,6 +29,6 @@ mod tests;
 #[cfg(feature = "with-bench")]
 mod bench;
 
-pub use derivation::{DerivationIndex, DerivationScheme};
+pub use derivation::{DerivationError, DerivationIndex, DerivationScheme};
 pub use key::{PrivateKeyError, PublicKeyError, XPrv, XPub, XPRV_SIZE, XPUB_SIZE};
 pub use signature::{Signature, SignatureError, SIGNATURE_SIZE};
