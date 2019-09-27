@@ -53,11 +53,12 @@ impl XPrv {
     /// Takes a non-extended ed25519 key and hash through SHA512 it in the same way the standard
     /// Ed25519 signature system make extended key, but also clean the 3rd highest bit of the key
     /// as described in the paper
-    pub fn from_nonextended(bytes: [u8; 32]) -> Self {
+    pub fn from_nonextended(bytes: [u8; 32], chain_code: [u8; CHAIN_CODE_SIZE]) -> Self {
         let mut extended_out = [0u8; XPRV_SIZE];
         let mut hasher = Sha512::new();
         hasher.input(&bytes);
         hasher.result(&mut extended_out[0..64]);
+        extended_out[64..96].clone_from_slice(&chain_code);
         Self::normalize_bytes(extended_out)
     }
 
