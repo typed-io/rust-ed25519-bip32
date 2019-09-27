@@ -2,7 +2,9 @@ use std::fmt;
 
 use cryptoxide::ed25519;
 use cryptoxide::ed25519::signature_extended;
+use cryptoxide::digest::Digest;
 use cryptoxide::util::fixed_time_eq;
+use cryptoxide::sha2::Sha512;
 
 use std::hash::{Hash, Hasher};
 
@@ -46,6 +48,17 @@ impl XPrv {
         bytes[31] |= 0b0100_0000;;
 
         Self::from_bytes(bytes)
+    }
+
+    /// Takes a non-extended ed25519 key and hash through SHA512 it in the same way the standard
+    /// Ed25519 signature system make extended key, but also clean the 3rd highest bit of the key
+    /// as described in the paper
+    pub fn from_nonextended(bytes: [u8; 32]) -> Self {
+        let mut extended_out = [0u8; XPRV_SIZE];
+        let mut hasher = Sha512::new();
+        hasher.input(&bytes);
+        hasher.result(&mut extended_out[0..64]);
+        Self::normalize_bytes(extended_out)
     }
 
     // Create a XPrv from the given bytes.
