@@ -1,4 +1,5 @@
 use super::hex;
+use std::error::Error;
 use std::fmt;
 use std::marker::PhantomData;
 
@@ -66,3 +67,15 @@ impl<T> AsRef<[u8]> for Signature<T> {
         &self.bytes
     }
 }
+impl fmt::Display for SignatureError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            SignatureError::InvalidLength(length) => write!(
+                f,
+                "Invalid signature length, expect {} but got {}",
+                SIGNATURE_SIZE, length
+            ),
+        }
+    }
+}
+impl Error for SignatureError {}
