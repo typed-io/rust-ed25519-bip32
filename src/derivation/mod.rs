@@ -6,6 +6,7 @@ use cryptoxide::curve25519::{ge_scalarmult_base, GeP3};
 use cryptoxide::hmac::Hmac;
 use cryptoxide::mac::Mac;
 use cryptoxide::sha2::Sha512;
+use std::{error::Error, fmt};
 
 use super::key::{mk_public_key, mk_xprv, mk_xpub, XPrv, XPub, XPRV_SIZE, XPUB_SIZE};
 pub use common::{DerivationIndex, DerivationScheme, DerivationType};
@@ -169,3 +170,13 @@ pub fn public(
 
     Ok(XPub::from_bytes(out))
 }
+
+impl fmt::Display for DerivationError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            DerivationError::InvalidAddition => f.write_str("Invalid addition"),
+            DerivationError::ExpectedSoftDerivation => f.write_str("Expected a soft derivation"),
+        }
+    }
+}
+impl Error for DerivationError {}
