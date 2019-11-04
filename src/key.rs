@@ -6,6 +6,7 @@ use cryptoxide::digest::Digest;
 use cryptoxide::util::fixed_time_eq;
 use cryptoxide::sha2::Sha512;
 
+use std::error::Error;
 use std::hash::{Hash, Hasher};
 
 use super::derivation::{self, DerivationError, DerivationIndex, DerivationScheme};
@@ -30,6 +31,7 @@ pub enum PrivateKeyError {
 }
 
 /// Possible errors during conversion from bytes
+#[derive(Debug)]
 pub enum PublicKeyError {
     LengthInvalid(usize),
 }
@@ -249,6 +251,34 @@ impl From<XPub> for [u8; XPUB_SIZE] {
         v.0
     }
 }
+
+impl fmt::Display for PublicKeyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PublicKeyError::LengthInvalid(length) => write!(
+                f,
+                "Invalid public key length, expected {} but received {}",
+                XPUB_SIZE, length
+            ),
+        }
+    }
+}
+impl Error for PublicKeyError {}
+
+impl fmt::Display for PrivateKeyError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            PrivateKeyError::LengthInvalid(length) => write!(
+                f,
+                "Invalid private key length, expected {} but received {}",
+                XPRV_SIZE, length
+            ),
+            PrivateKeyError::HighestBitsInvalid => f.write_str("Invalid highest bits"),
+            PrivateKeyError::LowestBitsInvalid => f.write_str("Invalid lowest bits"),
+        }
+    }
+}
+impl Error for PrivateKeyError {}
 
 pub(crate) fn mk_xprv(out: &mut [u8; XPRV_SIZE], kl: &[u8], kr: &[u8], cc: &[u8]) {
     assert!(kl.len() == 32);
