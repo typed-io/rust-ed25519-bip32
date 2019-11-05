@@ -72,7 +72,7 @@ impl fmt::Display for SignatureError {
         match self {
             SignatureError::InvalidLength(length) => write!(
                 f,
-                "Invalid signature length, expect {} but got {}",
+                "Invalid signature length, expected {} but got {}",
                 SIGNATURE_SIZE, length
             ),
         }
