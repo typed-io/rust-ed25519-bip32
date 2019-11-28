@@ -53,12 +53,14 @@ fn do_sign(xprv: &XPrv, expected_signature: &[u8]) {
 #[test]
 fn xprv_sign() {
     let prv = XPrv::from_bytes_verified(D1_H0).unwrap();
+    assert!(prv.is_3rd_highest_bit_clear());
     do_sign(&prv, &D1_H0_SIGNATURE);
 }
 
 #[test]
 fn verify_signature() {
     let prv = XPrv::from_bytes_verified(D1_H0).unwrap();
+    assert!(prv.is_3rd_highest_bit_clear());
     let xpub = prv.public();
     let sig: Signature<u8> = Signature::from_slice(&D1_H0_SIGNATURE).unwrap();
     assert_eq!(xpub.verify(MSG, &sig), true)
@@ -67,5 +69,6 @@ fn verify_signature() {
 #[test]
 fn xprv_derive() {
     let prv = XPrv::from_bytes_verified(D1).unwrap();
+    assert!(prv.is_3rd_highest_bit_clear());
     derive_xprv_eq(&prv, 0x80000000, D1_H0);
 }
