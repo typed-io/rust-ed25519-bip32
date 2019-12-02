@@ -72,3 +72,14 @@ fn xprv_derive() {
     assert!(prv.is_3rd_highest_bit_clear());
     derive_xprv_eq(&prv, 0x80000000, D1_H0);
 }
+
+#[test]
+fn marshall_xprv() {
+    let bytes = [1u8; 96];
+    let xprv = XPrv::normalize_bytes_force3rd(bytes);
+    let esk = xprv.extended_secret_key();
+    let cc = xprv.chain_code();
+    let xprv2 = XPrv::from_extended_and_chaincode(&esk, &cc);
+    assert_eq!(xprv.public(), xprv2.public());
+    assert_eq!(cc, xprv.public().chain_code());
+}
