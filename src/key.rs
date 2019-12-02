@@ -115,6 +115,19 @@ impl XPrv {
         }
     }
 
+    /// create a `XPrv` by its components (a 64 bytes extended secret key, and a 32 bytes chain code)
+    ///
+    /// No verification is done on the extended secret key
+    pub fn from_extended_and_chaincode(
+        sk: &[u8; EXTENDED_SECRET_KEY_SIZE],
+        chain_code: &[u8; CHAIN_CODE_SIZE],
+    ) -> Self {
+        let mut buf = [0u8; XPRV_SIZE];
+        buf[0..64].copy_from_slice(sk);
+        buf[64..96].copy_from_slice(chain_code);
+        Self::from_bytes(buf)
+    }
+
     // Create a XPrv from the given bytes.
     //
     // This function does not perform any validity check and should not be used outside
@@ -243,6 +256,17 @@ impl XPub {
     /// create a `XPub` by taking ownership of the given array
     pub fn from_bytes(bytes: [u8; XPUB_SIZE]) -> Self {
         XPub(bytes)
+    }
+
+    /// create a `XPub` by its components (a 32 bytes public key, and a 32 bytes chain code)
+    pub fn from_pk_and_chaincode(
+        pk: &[u8; PUBLIC_KEY_SIZE],
+        chain_code: &[u8; CHAIN_CODE_SIZE],
+    ) -> Self {
+        let mut buf = [0u8; XPUB_SIZE];
+        buf[0..32].copy_from_slice(pk);
+        buf[32..64].copy_from_slice(chain_code);
+        Self::from_bytes(buf)
     }
 
     /// create a `XPub` from the given slice. This slice must be of size `XPUB_SIZE`
