@@ -208,8 +208,28 @@ impl XPrv {
         derivation::private(self, index, scheme)
     }
 
-    pub fn get_extended(&self, out: &mut [u8; 64]) {
-        out.clone_from_slice(&self.as_ref()[0..64])
+    pub fn get_extended_mut(&self, out: &mut [u8; EXTENDED_SECRET_KEY_SIZE]) {
+        out.clone_from_slice(self.extended_secret_key_slice())
+    }
+
+    pub fn extended_secret_key_slice(&self) -> &[u8] {
+        &self.0[0..EXTENDED_SECRET_KEY_SIZE]
+    }
+
+    pub fn chain_code_slice(&self) -> &[u8] {
+        &self.0[64..]
+    }
+
+    pub fn extended_secret_key(&self) -> [u8; EXTENDED_SECRET_KEY_SIZE] {
+        let mut buf = [0u8; EXTENDED_SECRET_KEY_SIZE];
+        buf.copy_from_slice(self.extended_secret_key_slice());
+        buf
+    }
+
+    pub fn chain_code(&self) -> [u8; CHAIN_CODE_SIZE] {
+        let mut buf = [0u8; CHAIN_CODE_SIZE];
+        buf.copy_from_slice(self.chain_code_slice());
+        buf
     }
 }
 impl PartialEq for XPrv {
@@ -297,6 +317,26 @@ impl XPub {
 
     pub fn get_without_chaincode(&self, out: &mut [u8; 32]) {
         out.clone_from_slice(&self.0[0..32])
+    }
+
+    pub fn public_key_slice(&self) -> &[u8] {
+        &self.0[0..32]
+    }
+
+    pub fn chain_code_slice(&self) -> &[u8] {
+        &self.0[32..64]
+    }
+
+    pub fn public_key(&self) -> [u8; PUBLIC_KEY_SIZE] {
+        let mut buf = [0u8; PUBLIC_KEY_SIZE];
+        buf.copy_from_slice(self.public_key_slice());
+        buf
+    }
+
+    pub fn chain_code(&self) -> [u8; CHAIN_CODE_SIZE] {
+        let mut buf = [0u8; CHAIN_CODE_SIZE];
+        buf.copy_from_slice(self.chain_code_slice());
+        buf
     }
 }
 impl PartialEq for XPub {
