@@ -16,6 +16,7 @@ use super::signature::Signature;
 
 /// Extended Private key size in bytes
 pub const XPRV_SIZE: usize = 96;
+pub const EXTENDED_SECRET_KEY_SIZE: usize = 64;
 
 /// Extended Public key size in bytes
 pub const XPUB_SIZE: usize = 64;
