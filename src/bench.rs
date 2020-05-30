@@ -2,7 +2,7 @@ use super::*;
 
 fn new_sk() -> XPrv {
     let b = [0; XPRV_SIZE];
-    XPrv::normalize_bytes(b)
+    XPrv::normalize_bytes_force3rd(b)
 }
 
 #[bench]
