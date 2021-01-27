@@ -11,7 +11,7 @@ description = "Ed25519 BIP32"
 categories = [ "cryptography" ]
 
 [dependencies]
-cryptoxide = "0.2"
+cryptoxide = "0.3"
 
 [features]
 default = []
