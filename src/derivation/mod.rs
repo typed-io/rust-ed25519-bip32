@@ -1,5 +1,4 @@
 mod common;
-pub mod v1;
 pub mod v2;
 
 use cryptoxide::curve25519::{ge_scalarmult_base, GeP3};
@@ -19,21 +18,18 @@ pub enum DerivationError {
 
 fn add_256bits(x: &[u8], y: &[u8], scheme: DerivationScheme) -> [u8; 32] {
     match scheme {
-        DerivationScheme::V1 => v1::add_256bits_v1(x, y),
         DerivationScheme::V2 => v2::add_256bits_v2(x, y),
     }
 }
 
 fn add_28_mul8(x: &[u8], y: &[u8], scheme: DerivationScheme) -> [u8; 32] {
     match scheme {
-        DerivationScheme::V1 => v1::add_28_mul8_v1(x, y),
         DerivationScheme::V2 => v2::add_28_mul8_v2(x, y),
     }
 }
 
 fn serialize_index(i: u32, derivation_scheme: DerivationScheme) -> [u8; 4] {
     match derivation_scheme {
-        DerivationScheme::V1 => v1::be32(i),
         DerivationScheme::V2 => v2::le32(i),
     }
 }

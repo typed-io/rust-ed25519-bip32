@@ -23,12 +23,11 @@ impl DerivationType {
 
 /// Ed25519-bip32 Scheme Derivation version
 ///
-/// V1 should *not* be used in new code, it's only
-/// still present for compability purpose with
-/// deploy code.
+/// Only V2 is supported anymore, and this is
+/// left as an API compatibility type. V1 has
+/// been removed due to some shortcomings
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DerivationScheme {
-    V1,
     V2,
 }
 
