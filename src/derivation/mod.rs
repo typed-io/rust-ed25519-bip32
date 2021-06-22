@@ -86,6 +86,11 @@ pub fn private(xprv: &XPrv, index: DerivationIndex, scheme: DerivationScheme) ->
     // right = zr + kr
     let right = add_256bits(kr, zr, scheme);
 
+    // note: we don't perform the check for curve order divisibility because it will not happen:
+    // 1. all keys are in the range K=2^254 .. 2^255 (actually the even smaller range 2^254+2^253)
+    // 2. all keys are also multiple of 8
+    // 3. all existing multiple of the curve order n in the range of K are not multiple of 8
+
     let mut iout = [0u8; 64];
     imac.raw_result(&mut iout);
     let cc = &iout[32..];
