@@ -1,11 +1,11 @@
 use std::fmt;
 
-use cryptoxide::digest::Digest;
+use cryptoxide::constant_time::CtEqual;
 use cryptoxide::ed25519;
 use cryptoxide::ed25519::signature_extended;
-use cryptoxide::sha2::Sha512;
-use cryptoxide::util::fixed_time_eq;
+use cryptoxide::hashing::sha2::Sha512;
 
+use std::convert::{TryFrom, TryInto};
 use std::error::Error;
 use std::hash::{Hash, Hasher};
 
@@ -85,9 +85,7 @@ impl XPrv {
     /// instead of returning an error
     pub fn from_nonextended_force(bytes: &[u8; 32], chain_code: &[u8; CHAIN_CODE_SIZE]) -> Self {
         let mut extended_out = [0u8; XPRV_SIZE];
-        let mut hasher = Sha512::new();
-        hasher.input(bytes);
-        hasher.result(&mut extended_out[0..64]);
+        extended_out[0..64].copy_from_slice(&Sha512::new().update(bytes).finalize());
         extended_out[64..96].clone_from_slice(chain_code);
         Self::normalize_bytes_force3rd(extended_out)
     }
@@ -103,9 +101,7 @@ impl XPrv {
         chain_code: &[u8; CHAIN_CODE_SIZE],
     ) -> Result<Self, ()> {
         let mut extended_out = [0u8; XPRV_SIZE];
-        let mut hasher = Sha512::new();
-        hasher.input(bytes);
-        hasher.result(&mut extended_out[0..64]);
+        extended_out[0..64].copy_from_slice(&Sha512::new().update(bytes).finalize());
         extended_out[64..96].clone_from_slice(chain_code);
         let xprv = Self::normalize_bytes_ed25519(extended_out);
         if xprv.is_3rd_highest_bit_clear() {
@@ -184,7 +180,7 @@ impl XPrv {
     /// Get the associated `XPub`
     ///
     pub fn public(&self) -> XPub {
-        let pk = mk_public_key(&self.as_ref()[0..64]);
+        let pk = mk_public_key(self.extended_secret_key_bytes());
         let mut out = [0u8; XPUB_SIZE];
         out[0..32].clone_from_slice(&pk);
         out[32..64].clone_from_slice(&self.as_ref()[64..]);
@@ -194,7 +190,8 @@ impl XPrv {
     /// sign the given message with the `XPrv`.
     ///
     pub fn sign<T>(&self, message: &[u8]) -> Signature<T> {
-        Signature::from_bytes(signature_extended(message, &self.as_ref()[0..64]))
+        let extended_key = <&[u8; 64]>::try_from(&self.0[0..64]).unwrap();
+        Signature::from_bytes(signature_extended(message, extended_key))
     }
 
     /// verify a given signature
@@ -212,12 +209,20 @@ impl XPrv {
         out.clone_from_slice(self.extended_secret_key_slice())
     }
 
+    pub fn extended_secret_key_bytes(&self) -> &[u8; 64] {
+        self.0[0..EXTENDED_SECRET_KEY_SIZE].try_into().unwrap()
+    }
+
     pub fn extended_secret_key_slice(&self) -> &[u8] {
         &self.0[0..EXTENDED_SECRET_KEY_SIZE]
     }
 
+    pub fn chain_code(&self) -> &[u8; CHAIN_CODE_SIZE] {
+        self.0[64..96].try_into().unwrap()
+    }
+
     pub fn chain_code_slice(&self) -> &[u8] {
-        &self.0[64..]
+        &self.0[64..96]
     }
 
     pub fn extended_secret_key(&self) -> [u8; EXTENDED_SECRET_KEY_SIZE] {
@@ -225,16 +230,10 @@ impl XPrv {
         buf.copy_from_slice(self.extended_secret_key_slice());
         buf
     }
-
-    pub fn chain_code(&self) -> [u8; CHAIN_CODE_SIZE] {
-        let mut buf = [0u8; CHAIN_CODE_SIZE];
-        buf.copy_from_slice(self.chain_code_slice());
-        buf
-    }
 }
 impl PartialEq for XPrv {
     fn eq(&self, rhs: &XPrv) -> bool {
-        fixed_time_eq(self.as_ref(), rhs.as_ref())
+        self.0.ct_eq(&rhs.0).into()
     }
 }
 impl Eq for XPrv {}
@@ -304,7 +303,11 @@ impl XPub {
     /// verify a signature
     ///
     pub fn verify<T>(&self, message: &[u8], signature: &Signature<T>) -> bool {
-        ed25519::verify(message, &self.as_ref()[0..32], signature.as_ref())
+        ed25519::verify(
+            message,
+            &self.0[0..32].try_into().unwrap(),
+            signature.to_bytes(),
+        )
     }
 
     pub fn derive(
@@ -317,6 +320,10 @@ impl XPub {
 
     pub fn get_without_chaincode(&self, out: &mut [u8; 32]) {
         out.clone_from_slice(&self.0[0..32])
+    }
+
+    pub fn public_key_bytes(&self) -> &[u8; 32] {
+        <&[u8; 32]>::try_from(&self.0[0..32]).unwrap()
     }
 
     pub fn public_key_slice(&self) -> &[u8] {
@@ -333,15 +340,13 @@ impl XPub {
         buf
     }
 
-    pub fn chain_code(&self) -> [u8; CHAIN_CODE_SIZE] {
-        let mut buf = [0u8; CHAIN_CODE_SIZE];
-        buf.copy_from_slice(self.chain_code_slice());
-        buf
+    pub fn chain_code(&self) -> &[u8; CHAIN_CODE_SIZE] {
+        (&self.0[32..64]).try_into().unwrap()
     }
 }
 impl PartialEq for XPub {
     fn eq(&self, rhs: &XPub) -> bool {
-        fixed_time_eq(self.as_ref(), rhs.as_ref())
+        self.0.ct_eq(&rhs.0).into()
     }
 }
 impl Eq for XPub {}
@@ -417,7 +422,6 @@ pub(crate) fn mk_xpub(out: &mut [u8; XPUB_SIZE], pk: &[u8], cc: &[u8]) {
     out[32..64].clone_from_slice(cc);
 }
 
-pub fn mk_public_key(extended_secret: &[u8]) -> [u8; PUBLIC_KEY_SIZE] {
-    assert!(extended_secret.len() == 64);
-    ed25519::to_public(extended_secret)
+pub fn mk_public_key(extended_secret: &[u8; 64]) -> [u8; PUBLIC_KEY_SIZE] {
+    ed25519::extended_to_public(extended_secret)
 }

@@ -1,7 +1,4 @@
-pub fn add_28_mul8_v2(x: &[u8], y: &[u8]) -> [u8; 32] {
-    assert!(x.len() == 32);
-    assert!(y.len() == 32);
-
+pub fn add_28_mul8_v2(x: &[u8; 32], y: &[u8; 32]) -> [u8; 32] {
     let mut carry: u16 = 0;
     let mut out = [0u8; 32];
 
@@ -18,10 +15,7 @@ pub fn add_28_mul8_v2(x: &[u8], y: &[u8]) -> [u8; 32] {
     out
 }
 
-pub fn add_256bits_v2(x: &[u8], y: &[u8]) -> [u8; 32] {
-    assert!(x.len() == 32);
-    assert!(y.len() == 32);
-
+pub fn add_256bits_v2(x: &[u8; 32], y: &[u8; 32]) -> [u8; 32] {
     let mut carry: u16 = 0;
     let mut out = [0u8; 32];
     for i in 0..32 {

@@ -1,11 +1,15 @@
 mod common;
 pub mod v2;
 
-use cryptoxide::curve25519::{ge_scalarmult_base, GeP3};
+use cryptoxide::curve25519::{Ge, Scalar};
 use cryptoxide::hmac::Hmac;
 use cryptoxide::mac::Mac;
 use cryptoxide::sha2::Sha512;
-use std::{error::Error, fmt};
+use std::{
+    convert::{TryFrom, TryInto},
+    error::Error,
+    fmt,
+};
 
 use super::key::{mk_public_key, mk_xprv, mk_xpub, XPrv, XPub, XPRV_SIZE, XPUB_SIZE};
 pub use common::{DerivationIndex, DerivationScheme, DerivationType};
@@ -16,13 +20,13 @@ pub enum DerivationError {
     ExpectedSoftDerivation,
 }
 
-fn add_256bits(x: &[u8], y: &[u8], scheme: DerivationScheme) -> [u8; 32] {
+fn add_256bits(x: &[u8; 32], y: &[u8; 32], scheme: DerivationScheme) -> [u8; 32] {
     match scheme {
         DerivationScheme::V2 => v2::add_256bits_v2(x, y),
     }
 }
 
-fn add_28_mul8(x: &[u8], y: &[u8], scheme: DerivationScheme) -> [u8; 32] {
+fn add_28_mul8(x: &[u8; 32], y: &[u8; 32], scheme: DerivationScheme) -> [u8; 32] {
     match scheme {
         DerivationScheme::V2 => v2::add_28_mul8_v2(x, y),
     }
@@ -44,9 +48,9 @@ pub fn private(xprv: &XPrv, index: DerivationIndex, scheme: DerivationScheme) ->
      *    let I = HMAC-SHA512(Key = cpar, Data = 0x03 || serP(point(kpar)) || ser32(i)).
      **/
 
-    let ekey = &xprv.as_ref()[0..64];
-    let kl = &ekey[0..32];
-    let kr = &ekey[32..64];
+    let ekey = xprv.extended_secret_key_bytes();
+    let kl: &[u8; 32] = &ekey[0..32].try_into().unwrap();
+    let kr: &[u8; 32] = &ekey[32..64].try_into().unwrap();
     let chaincode = &xprv.as_ref()[64..96];
 
     let mut zmac = Hmac::new(Sha512::new(), &chaincode);
@@ -74,8 +78,8 @@ pub fn private(xprv: &XPrv, index: DerivationIndex, scheme: DerivationScheme) ->
 
     let mut zout = [0u8; 64];
     zmac.raw_result(&mut zout);
-    let zl = &zout[0..32];
-    let zr = &zout[32..64];
+    let zl: &[u8; 32] = &zout[0..32].try_into().unwrap();
+    let zr: &[u8; 32] = &zout[32..64].try_into().unwrap();
 
     // left = kl + 8 * trunc28(zl)
     let left = add_28_mul8(kl, zl, scheme);
@@ -100,28 +104,28 @@ pub fn private(xprv: &XPrv, index: DerivationIndex, scheme: DerivationScheme) ->
     XPrv::from_bytes(out)
 }
 
-fn point_of_trunc28_mul8(sk: &[u8], scheme: DerivationScheme) -> [u8; 32] {
-    assert!(sk.len() == 32);
+fn point_of_trunc28_mul8(sk: &[u8; 32], scheme: DerivationScheme) -> [u8; 32] {
     let copy = add_28_mul8(&[0u8; 32], sk, scheme);
-    let a = ge_scalarmult_base(&copy);
+    let scalar = Scalar::from_bytes(&copy);
+    let a = Ge::scalarmult_base(&scalar);
     a.to_bytes()
 }
 
-fn point_plus(p1: &[u8], p2: &[u8]) -> Result<[u8; 32], DerivationError> {
-    let a = match GeP3::from_bytes_negate_vartime(p1) {
+fn point_plus(p1: &[u8; 32], p2: &[u8; 32]) -> Result<[u8; 32], DerivationError> {
+    let a = match Ge::from_bytes(p1) {
         Some(g) => g,
         None => {
             return Err(DerivationError::InvalidAddition);
         }
     };
-    let b = match GeP3::from_bytes_negate_vartime(p2) {
+    let b = match Ge::from_bytes(p2) {
         Some(g) => g,
         None => {
             return Err(DerivationError::InvalidAddition);
         }
     };
-    let r = a + b.to_cached();
-    let mut r = r.to_p2().to_bytes();
+    let r = &a + &b.to_cached();
+    let mut r = r.to_full().to_bytes();
     r[31] ^= 0x80;
     Ok(r)
 }
@@ -131,7 +135,7 @@ pub fn public(
     index: DerivationIndex,
     scheme: DerivationScheme,
 ) -> Result<XPub, DerivationError> {
-    let pk = &xpub.as_ref()[0..32];
+    let pk = <&[u8; 32]>::try_from(&xpub.as_ref()[0..32]).unwrap();
     let chaincode = &xpub.as_ref()[32..64];
 
     let mut zmac = Hmac::new(Sha512::new(), &chaincode);
@@ -140,10 +144,10 @@ pub fn public(
     match DerivationType::from_index(index) {
         DerivationType::Soft(_) => {
             zmac.input(&[0x2]);
-            zmac.input(&pk);
+            zmac.input(pk);
             zmac.input(&seri);
             imac.input(&[0x3]);
-            imac.input(&pk);
+            imac.input(pk);
             imac.input(&seri);
         }
         DerivationType::Hard(_) => {
@@ -153,7 +157,7 @@ pub fn public(
 
     let mut zout = [0u8; 64];
     zmac.raw_result(&mut zout);
-    let zl = &zout[0..32];
+    let zl = <&[u8; 32]>::try_from(&zout[0..32]).unwrap();
     let _zr = &zout[32..64];
 
     // left = kl + 8 * trunc28(zl)

@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fmt;
 use std::marker::PhantomData;
 
-use cryptoxide::util::fixed_time_eq;
+use cryptoxide::constant_time::CtEqual;
 
 /// Extended signature size in bytes
 pub const SIGNATURE_SIZE: usize = 64;
@@ -48,7 +48,7 @@ impl<T> Signature<T> {
 }
 impl<T> PartialEq for Signature<T> {
     fn eq(&self, rhs: &Signature<T>) -> bool {
-        fixed_time_eq(self.as_ref(), rhs.as_ref())
+        self.bytes.ct_eq(&rhs.bytes).into()
     }
 }
 impl<T> Eq for Signature<T> {}
