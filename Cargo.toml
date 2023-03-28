@@ -14,5 +14,6 @@ categories = [ "cryptography" ]
 cryptoxide = "0.4"
 
 [features]
-default = []
+default = ["std"]
+std = []
 with-bench = []

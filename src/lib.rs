@@ -10,11 +10,19 @@
 //! In soft derivation, the important property is that given the parent public key,
 //! one can derive all softly derived children public key.
 
-#![cfg_attr(feature = "with-bench", feature(test))]
+#![cfg_attr(not(feature = "std"), no_std)]
+#![cfg_attr(not(feature = "std"), feature(error_in_core))]
 
+#![cfg_attr(feature = "with-bench", feature(test))]
 #[cfg(test)]
 #[cfg(feature = "with-bench")]
 extern crate test;
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
+#[cfg(not(feature = "std"))]
+extern crate core;
 
 mod derivation;
 mod hex;
