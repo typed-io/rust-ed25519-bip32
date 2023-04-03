@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use core as std;
+
 use std::fmt;
 
 use cryptoxide::constant_time::CtEqual;
