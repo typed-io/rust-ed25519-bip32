@@ -41,6 +41,12 @@ pub enum PublicKeyError {
     LengthInvalid(usize),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DerivationResult {
+    pub pub_key: XPub,
+    pub tweak: [u8; PUBLIC_KEY_SIZE],
+}
+
 /// HDWallet extended private key
 ///
 /// Effectively this is an ed25519 extended secret key (64 bytes) followed by a chain code (32 bytes).
@@ -314,7 +320,7 @@ impl XPub {
         &self,
         scheme: DerivationScheme,
         index: DerivationIndex,
-    ) -> Result<Self, DerivationError> {
+    ) -> Result<DerivationResult, DerivationError> {
         derivation::public(self, index, scheme)
     }
 

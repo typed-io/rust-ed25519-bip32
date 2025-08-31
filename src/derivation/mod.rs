@@ -11,7 +11,15 @@ use std::{
     fmt,
 };
 
-use super::key::{mk_public_key, mk_xprv, mk_xpub, XPrv, XPub, XPRV_SIZE, XPUB_SIZE};
+use super::key::{
+    mk_public_key,
+    mk_xprv,
+    mk_xpub,
+    XPrv,
+    XPub,
+    XPRV_SIZE,
+    XPUB_SIZE,
+    DerivationResult};
 pub use common::{DerivationIndex, DerivationScheme, DerivationType};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -134,7 +142,7 @@ pub fn public(
     xpub: &XPub,
     index: DerivationIndex,
     scheme: DerivationScheme,
-) -> Result<XPub, DerivationError> {
+) -> Result<DerivationResult, DerivationError> {
     let pk = <&[u8; 32]>::try_from(&xpub.as_ref()[0..32]).unwrap();
     let chaincode = &xpub.as_ref()[32..64];
 
@@ -173,7 +181,10 @@ pub fn public(
     imac.reset();
     zmac.reset();
 
-    Ok(XPub::from_bytes(out))
+    Ok(DerivationResult {
+        pub_key: XPub::from_bytes(out),
+        tweak: left.try_into().unwrap(),
+    })
 }
 
 impl fmt::Display for DerivationError {

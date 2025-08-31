@@ -30,5 +30,5 @@ mod tests;
 mod bench;
 
 pub use derivation::{DerivationError, DerivationIndex, DerivationScheme};
-pub use key::{PrivateKeyError, PublicKeyError, XPrv, XPub, XPRV_SIZE, XPUB_SIZE};
+pub use key::{PrivateKeyError, PublicKeyError, XPrv, XPub, XPRV_SIZE, XPUB_SIZE, DerivationResult};
 pub use signature::{Signature, SignatureError, SIGNATURE_SIZE};
