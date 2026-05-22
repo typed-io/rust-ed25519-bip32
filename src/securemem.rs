@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use core as std;
+
 pub fn zero(to_zero: &mut [u8]) {
     // the unsafety of this call is bounded to the existence of the pointer
     // and the accuracy of the length of the array.

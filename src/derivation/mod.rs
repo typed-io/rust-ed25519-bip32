@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use core as std;
+
 mod common;
 pub mod v2;
 

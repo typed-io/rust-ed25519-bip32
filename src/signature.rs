@@ -1,3 +1,6 @@
+#[cfg(not(feature = "std"))]
+use core as std;
+
 use super::hex;
 use std::error::Error;
 use std::fmt;

@@ -1,3 +1,9 @@
+#[cfg(not(feature = "std"))]
+use alloc::string::String;
+
+#[cfg(not(feature = "std"))]
+use alloc::vec::Vec;
+
 const ALPHABET: &'static [u8] = b"0123456789abcdef";
 
 pub fn encode(input: &[u8]) -> String {
