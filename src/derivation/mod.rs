@@ -2,9 +2,8 @@ mod common;
 pub mod v2;
 
 use cryptoxide::curve25519::{Ge, Scalar};
-use cryptoxide::hmac::Hmac;
-use cryptoxide::mac::Mac;
-use cryptoxide::sha2::Sha512;
+use cryptoxide::hashing::sha2::Sha512;
+use cryptoxide::hmac;
 use std::{
     convert::{TryFrom, TryInto},
     error::Error,
@@ -53,33 +52,32 @@ pub fn private(xprv: &XPrv, index: DerivationIndex, scheme: DerivationScheme) ->
     let kr: &[u8; 32] = &ekey[32..64].try_into().unwrap();
     let chaincode = &xprv.as_ref()[64..96];
 
-    let mut zmac = Hmac::new(Sha512::new(), &chaincode);
-    let mut imac = Hmac::new(Sha512::new(), &chaincode);
+    let mut zmac = hmac::Context::<Sha512>::new(&chaincode);
+    let mut imac = hmac::Context::<Sha512>::new(&chaincode);
     let seri = serialize_index(index, scheme);
     match DerivationType::from_index(index) {
         DerivationType::Soft(_) => {
             let pk = mk_public_key(ekey);
-            zmac.input(&[0x2]);
-            zmac.input(&pk);
-            zmac.input(&seri);
-            imac.input(&[0x3]);
-            imac.input(&pk);
-            imac.input(&seri);
+            zmac.update(&[0x2]);
+            zmac.update(&pk);
+            zmac.update(&seri);
+            imac.update(&[0x3]);
+            imac.update(&pk);
+            imac.update(&seri);
         }
         DerivationType::Hard(_) => {
-            zmac.input(&[0x0]);
-            zmac.input(ekey);
-            zmac.input(&seri);
-            imac.input(&[0x1]);
-            imac.input(ekey);
-            imac.input(&seri);
+            zmac.update(&[0x0]);
+            zmac.update(ekey);
+            zmac.update(&seri);
+            imac.update(&[0x1]);
+            imac.update(ekey);
+            imac.update(&seri);
         }
     };
 
-    let mut zout = [0u8; 64];
-    zmac.raw_result(&mut zout);
-    let zl: &[u8; 32] = &zout[0..32].try_into().unwrap();
-    let zr: &[u8; 32] = &zout[32..64].try_into().unwrap();
+    let zout = zmac.finalize();
+    let zl: &[u8; 32] = &zout.as_ref()[0..32].try_into().unwrap();
+    let zr: &[u8; 32] = &zout.as_ref()[32..64].try_into().unwrap();
 
     // left = kl + 8 * trunc28(zl)
     let left = add_28_mul8(kl, zl, scheme);
@@ -91,15 +89,11 @@ pub fn private(xprv: &XPrv, index: DerivationIndex, scheme: DerivationScheme) ->
     // 2. all keys are also multiple of 8
     // 3. all existing multiple of the curve order n in the range of K are not multiple of 8
 
-    let mut iout = [0u8; 64];
-    imac.raw_result(&mut iout);
-    let cc = &iout[32..];
+    let iout = imac.finalize();
+    let cc = &iout.as_ref()[32..];
 
     let mut out = [0u8; XPRV_SIZE];
     mk_xprv(&mut out, &left, &right, cc);
-
-    imac.reset();
-    zmac.reset();
 
     XPrv::from_bytes(out)
 }
@@ -138,40 +132,35 @@ pub fn public(
     let pk = <&[u8; 32]>::try_from(&xpub.as_ref()[0..32]).unwrap();
     let chaincode = &xpub.as_ref()[32..64];
 
-    let mut zmac = Hmac::new(Sha512::new(), &chaincode);
-    let mut imac = Hmac::new(Sha512::new(), &chaincode);
+    let mut zmac = hmac::Context::<Sha512>::new(&chaincode);
+    let mut imac = hmac::Context::<Sha512>::new(&chaincode);
     let seri = serialize_index(index, scheme);
     match DerivationType::from_index(index) {
         DerivationType::Soft(_) => {
-            zmac.input(&[0x2]);
-            zmac.input(pk);
-            zmac.input(&seri);
-            imac.input(&[0x3]);
-            imac.input(pk);
-            imac.input(&seri);
+            zmac.update(&[0x2]);
+            zmac.update(pk);
+            zmac.update(&seri);
+            imac.update(&[0x3]);
+            imac.update(pk);
+            imac.update(&seri);
         }
         DerivationType::Hard(_) => {
             return Err(DerivationError::ExpectedSoftDerivation);
         }
     };
 
-    let mut zout = [0u8; 64];
-    zmac.raw_result(&mut zout);
-    let zl = <&[u8; 32]>::try_from(&zout[0..32]).unwrap();
-    let _zr = &zout[32..64];
+    let zout = zmac.finalize();
+    let zl = <&[u8; 32]>::try_from(&zout.as_ref()[0..32]).unwrap();
+    let _zr = &zout.as_ref()[32..64];
 
     // left = kl + 8 * trunc28(zl)
     let left = point_plus(pk, &point_of_trunc28_mul8(zl, scheme))?;
 
-    let mut iout = [0u8; 64];
-    imac.raw_result(&mut iout);
-    let cc = &iout[32..];
+    let iout = imac.finalize();
+    let cc = &iout.as_ref()[32..];
 
     let mut out = [0u8; XPUB_SIZE];
     mk_xpub(&mut out, &left, cc);
-
-    imac.reset();
-    zmac.reset();
 
     Ok(XPub::from_bytes(out))
 }
