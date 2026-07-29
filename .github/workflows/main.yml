@@ -21,6 +21,36 @@ jobs:
         with:
           command: check
 
+  check-no-std:
+    name: Check no_std
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          target: thumbv7em-none-eabihf
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --target thumbv7em-none-eabihf
+
+  check-msrv:
+    name: Check MSRV (1.81)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.81.0
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+
   test:
     name: Test Suite
     strategy:

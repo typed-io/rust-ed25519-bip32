@@ -1,7 +1,7 @@
 use super::hex;
-use std::error::Error;
-use std::fmt;
-use std::marker::PhantomData;
+use core::error::Error;
+use core::fmt;
+use core::marker::PhantomData;
 
 use cryptoxide::constant_time::CtEqual;
 
@@ -54,12 +54,12 @@ impl<T> PartialEq for Signature<T> {
 impl<T> Eq for Signature<T> {}
 impl<T> fmt::Display for Signature<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", hex::encode(self.as_ref()))
+        hex::encode(self.as_ref(), f)
     }
 }
 impl<T> fmt::Debug for Signature<T> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", hex::encode(self.as_ref()))
+        hex::encode(self.as_ref(), f)
     }
 }
 impl<T> AsRef<[u8]> for Signature<T> {

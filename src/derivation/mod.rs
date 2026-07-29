@@ -1,14 +1,14 @@
 mod common;
 pub mod v2;
 
-use cryptoxide::curve25519::{Ge, Scalar};
-use cryptoxide::hashing::sha2::Sha512;
-use cryptoxide::hmac;
-use std::{
+use core::{
     convert::{TryFrom, TryInto},
     error::Error,
     fmt,
 };
+use cryptoxide::curve25519::{Ge, Scalar};
+use cryptoxide::hashing::sha2::Sha512;
+use cryptoxide::hmac;
 
 use super::key::{mk_public_key, mk_xprv, mk_xpub, XPrv, XPub, XPRV_SIZE, XPUB_SIZE};
 pub use common::{DerivationIndex, DerivationScheme, DerivationType};

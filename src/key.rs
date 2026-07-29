@@ -1,13 +1,13 @@
-use std::fmt;
+use core::fmt;
 
 use cryptoxide::constant_time::CtEqual;
 use cryptoxide::ed25519;
 use cryptoxide::ed25519::signature_extended;
 use cryptoxide::hashing::sha2::Sha512;
 
-use std::convert::{TryFrom, TryInto};
-use std::error::Error;
-use std::hash::{Hash, Hasher};
+use core::convert::{TryFrom, TryInto};
+use core::error::Error;
+use core::hash::{Hash, Hasher};
 
 use super::derivation::{self, DerivationError, DerivationIndex, DerivationScheme};
 use super::hex;
@@ -244,12 +244,12 @@ impl Clone for XPrv {
 }
 impl fmt::Debug for XPrv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", hex::encode(self.as_ref()))
+        hex::encode(self.as_ref(), f)
     }
 }
 impl fmt::Display for XPrv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", hex::encode(self.as_ref()))
+        hex::encode(self.as_ref(), f)
     }
 }
 impl AsRef<[u8]> for XPrv {
@@ -357,12 +357,12 @@ impl Hash for XPub {
 }
 impl fmt::Display for XPub {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", hex::encode(self.as_ref()))
+        hex::encode(self.as_ref(), f)
     }
 }
 impl fmt::Debug for XPub {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", hex::encode(self.as_ref()))
+        hex::encode(self.as_ref(), f)
     }
 }
 impl AsRef<[u8]> for XPub {
