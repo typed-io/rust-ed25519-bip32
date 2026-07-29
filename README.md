@@ -9,6 +9,12 @@ paper from Dmitry Khovratovich and Jason Law.
 * small dependency tree : only depends on 1 package [cryptoxide](https://github.com/typed-io/cryptoxide/) which has no other dependencies.
 * compatible with [cardano](https://cardano.org) key derivation
 * used by the [jormungandr](https://github.com/input-output-hk/jormungandr) node
+* `no_std` compatible (no `alloc` required)
+
+## `no_std` support
+
+The crate is unconditionally `no_std` and requires neither `std` nor `alloc`,
+so it works out of the box on embedded and wasm targets (no feature to enable)
 
 ## Derivation V1
 

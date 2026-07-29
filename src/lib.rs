@@ -11,10 +11,14 @@
 //! one can derive all softly derived children public key.
 
 #![cfg_attr(feature = "with-bench", feature(test))]
+#![no_std]
 
 #[cfg(test)]
 #[cfg(feature = "with-bench")]
 extern crate test;
+
+#[cfg(test)]
+extern crate std;
 
 mod derivation;
 mod hex;
