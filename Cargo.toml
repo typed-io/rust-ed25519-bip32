@@ -12,7 +12,12 @@ description = "Ed25519 BIP32"
 categories = [ "cryptography" ]
 
 [dependencies]
-cryptoxide = "0.6"
+cryptoxide = { version = "0.6", default-features = false, features = [
+  "ed25519",
+  "hmac",
+  "sha2",
+] }
+zeroize = { version = "=1.8.2", default-features = false }
 
 [features]
 default = []

@@ -4,6 +4,7 @@ use cryptoxide::constant_time::CtEqual;
 use cryptoxide::ed25519;
 use cryptoxide::ed25519::signature_extended;
 use cryptoxide::hashing::sha2::Sha512;
+use zeroize::Zeroize;
 
 use core::convert::{TryFrom, TryInto};
 use core::error::Error;
@@ -11,7 +12,6 @@ use core::hash::{Hash, Hasher};
 
 use super::derivation::{self, DerivationError, DerivationIndex, DerivationScheme};
 use super::hex;
-use super::securemem;
 use super::signature::Signature;
 
 /// Extended Private key size in bytes
@@ -41,10 +41,11 @@ pub enum PublicKeyError {
     LengthInvalid(usize),
 }
 
-/// HDWallet extended private key
+/// HDWallet extended private key.
 ///
 /// Effectively this is an ed25519 extended secret key (64 bytes) followed by a chain code (32 bytes).
-///
+/// Its `Debug` and `Display` implementations are deliberately redacted; use
+/// the explicit byte accessors when secret material is required.
 pub struct XPrv([u8; XPRV_SIZE]);
 impl XPrv {
     /// takes the given raw bytes and perform some modifications to normalize
@@ -244,12 +245,12 @@ impl Clone for XPrv {
 }
 impl fmt::Debug for XPrv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        hex::encode(self.as_ref(), f)
+        f.write_str("[REDACTED]")
     }
 }
 impl fmt::Display for XPrv {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        hex::encode(self.as_ref(), f)
+        f.write_str("[REDACTED]")
     }
 }
 impl AsRef<[u8]> for XPrv {
@@ -264,7 +265,7 @@ impl From<XPrv> for [u8; XPRV_SIZE] {
 }
 impl Drop for XPrv {
     fn drop(&mut self) {
-        securemem::zero(&mut self.0);
+        self.0.zeroize();
     }
 }
 
