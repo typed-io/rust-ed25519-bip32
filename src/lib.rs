@@ -23,7 +23,6 @@ extern crate std;
 mod derivation;
 mod hex;
 mod key;
-mod securemem;
 mod signature;
 
 #[cfg(test)]

@@ -84,3 +84,11 @@ fn marshall_xprv() {
     assert_eq!(xprv.public(), xprv2.public());
     assert_eq!(cc, xprv.public().chain_code());
 }
+
+#[test]
+fn xprv_formatting_is_redacted() {
+    let xprv = XPrv::from_bytes_verified(D1).unwrap();
+
+    assert_eq!(std::format!("{xprv:?}"), "[REDACTED]");
+    assert_eq!(std::format!("{xprv}"), "[REDACTED]");
+}
