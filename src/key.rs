@@ -242,16 +242,6 @@ impl Clone for XPrv {
         Self::from_slice(self.as_ref()).expect("it is already a safely constructed XPrv")
     }
 }
-impl fmt::Debug for XPrv {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        hex::encode(self.as_ref(), f)
-    }
-}
-impl fmt::Display for XPrv {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        hex::encode(self.as_ref(), f)
-    }
-}
 impl AsRef<[u8]> for XPrv {
     fn as_ref(&self) -> &[u8] {
         &self.0
