@@ -254,7 +254,7 @@ impl From<XPrv> for [u8; XPRV_SIZE] {
 }
 impl Drop for XPrv {
     fn drop(&mut self) {
-        securemem::zero(&mut self.0);
+        securemem::zero_bytes(&mut self.0);
     }
 }
 
