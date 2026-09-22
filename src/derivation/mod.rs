@@ -10,7 +10,7 @@ use cryptoxide::curve25519::{Ge, Scalar};
 use cryptoxide::hashing::sha2::Sha512;
 use cryptoxide::hmac;
 
-use super::key::{mk_public_key, mk_xprv, mk_xpub, XPrv, XPub, XPRV_SIZE, XPUB_SIZE};
+use super::key::{XPRV_SIZE, XPUB_SIZE, XPrv, XPub, mk_public_key, mk_xprv, mk_xpub};
 pub use common::{DerivationIndex, DerivationScheme, DerivationType};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
